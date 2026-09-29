@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# runs wzl.ps1 from wsl. also holds the probe wzl.ps1 runs in each distro,
+# windows cant see a wsl pane's cwd or its nvims so this finds them by WEZTERM_PANE
+set -euo pipefail
+here=$(dirname "$(readlink -f "$0")")
+PATH=$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH
+
+probe() {
+  local dir=$1 p comm st env pane cwd s nv out
+  declare -A cwds
+  # newest shell in a pane is the one you'd be typing in. builtins only, this
+  # walks every process
+  while IFS=$'\t' read -r _ pane cwd; do cwds[$pane]=$cwd; done < <(
+    for p in /proc/[0-9]*; do
+      read -r comm 2>/dev/null < "$p/comm" || continue
+      case $comm in bash|zsh|fish|sh) ;; *) continue ;; esac
+      env=$(tr '\0' '\n' 2>/dev/null < "$p/environ") || continue
+      [[ $env =~ (^|$'\n')WEZTERM_PANE=([0-9]+) ]] || continue
+      read -r -a st 2>/dev/null < "$p/stat" || continue
+      printf '%s\t%s\t%s\n' "${st[21]}" "${BASH_REMATCH[2]}" "$(readlink "$p/cwd")"
+    done | sort -n)
+  for pane in "${!cwds[@]}"; do printf 'shell\t%s\t%s\n' "$pane" "${cwds[$pane]}"; done
+
+  # the mise shim costs a startup per call, so go straight to the binary
+  nv=$(mise which nvim 2>/dev/null || command -v nvim) || return 0
+  for s in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim.*; do
+    [ -S "$s" ] || continue
+    out=$("$nv" --headless --server "$s" --remote-expr '$WEZTERM_PANE .. "\t" .. getcwd()' 2>/dev/null) || continue
+    pane=${out%%$'\t'*}
+    [ -n "$pane" ] || continue
+    "$nv" --headless --server "$s" --remote-expr "execute('mksession! ' .. fnameescape('$dir/nvim-$pane.vim'))" >/dev/null
+    printf 'nvim\t%s\n' "$out"
+  done
+}
+
+case ${1:-} in
+  _probe) probe "$2" ;;
+  *) WSLENV=WEZTERM_PANE:${WSLENV:-} exec pwsh.exe -NoProfile -File "$(wslpath -w "$here/wzl.ps1")" "$@" ;;
+esac
