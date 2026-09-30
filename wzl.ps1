@@ -133,7 +133,8 @@ function Spawn-Args($p) {
     # WSLENV so this pane can still be found next save
     $c = "`$env:WSLENV = 'WEZTERM_PANE:' + `$env:WSLENV; wsl -d $($p.wsl) --cd '$($p.cwd)'"
     if ($p.nvim) { $c += " -e bash -ic `"nvim -S '$(To-Wsl (Join-Path $dir $p.nvim))'; exec bash`"" }
-    return '--', 'pwsh', '-NoLogo', '-NoExit', '-Command', $c
+    # no profile, it only launches wsl and the profile was most of the startup
+    return '--', 'pwsh', '-NoLogo', '-NoProfile', '-Command', $c
   }
   $a = @()
   if ($p.cwd -and (Test-Path -LiteralPath $p.cwd)) { $a += '--cwd', $p.cwd }
