@@ -44,9 +44,9 @@ Layouts go in `~\.config\wezterm\layouts\<name>\`, or `$env:WZL_DIR`.
 ## How it works
 
 - splits are worked out from the pane positions in `wezterm cli list` and rebuilt with `split-pane --percent`, so they scale to whatever size the window is
-- every nvim listens on a pipe and inherits `WEZTERM_PANE`, so each one gets asked which pane it's in and to `:mksession` into the layout folder. Restored panes run `nvim -S` under `pwsh -NoExit`, quitting nvim leaves a shell
+- every nvim listens on a pipe and inherits `WEZTERM_PANE`, so each one gets asked which pane it's in and to `:mksession` into the layout folder. Restored panes run `nvim -S` under msys2's zsh (`scoop install msys2`), quitting nvim leaves a shell
 - zoomed panes are unzoomed for a moment to read the real splits
-- wsl panes are found by `./wzl _probe`, which runs in each running distro, matches shells and nvims to panes by `WEZTERM_PANE` and reads their cwd from `/proc`. They come back as `wsl -d <distro> --cd <dir>` from cmd, same as typing `wsl`, with `bash -ic "nvim -S ..."` if there was an nvim
+- wsl panes are found by `./wzl _probe`, which runs in each running distro, matches shells and nvims to panes by `WEZTERM_PANE` and reads their cwd from `/proc`. They come back as `wsl -d <distro> --cd <dir>` run straight from wezterm, with `zsh -ic "nvim -S ..."` if there was an nvim
 - `./wzl` is also the wsl command, it just runs `wzl.ps1` through `pwsh.exe`
 
 ## Notes

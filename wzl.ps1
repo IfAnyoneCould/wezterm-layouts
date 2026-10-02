@@ -130,15 +130,14 @@ function First($t) { if ($t.pane) { $t.pane } else { First $t.a } }
 
 function Spawn-Args($p) {
   if ($p.wsl) {
-    # WSLENV so this pane can still be found next save
-    # cmd not pwsh, it only sets WSLENV and pwsh was ~0.5s of every pane
-    $a = '--', 'cmd', '/c', 'set', 'WSLENV=WEZTERM_PANE:%WSLENV%&&', 'wsl', '-d', $p.wsl, '--cd', $p.cwd
-    if ($p.nvim) { $a += '-e', 'bash', '-ic', "nvim -S '$(To-Wsl (Join-Path $dir $p.nvim))'; exec bash" }
+    # straight into wsl, WEZTERM_PANE already gets through from the WSLENV in .wezterm.lua
+    $a = '--', 'wsl', '-d', $p.wsl, '--cd', $p.cwd
+    if ($p.nvim) { $a += '-e', 'zsh', '-ic', "nvim -S '$(To-Wsl (Join-Path $dir $p.nvim))'; exec zsh" }
     return $a
   }
   $a = @()
   if ($p.cwd -and (Test-Path -LiteralPath $p.cwd)) { $a += '--cwd', $p.cwd }
-  if ($p.nvim) { $a += '--', 'pwsh', '-NoLogo', '-NoExit', '-Command', "nvim -S '$(Join-Path $dir $p.nvim)'" }
+  if ($p.nvim) { $a += '--', "$HOME\scoop\apps\msys2\current\usr\bin\zsh.exe", '-lic', "nvim -S '$(Join-Path $dir $p.nvim)'; exec zsh -l" }
   $a
 }
 
