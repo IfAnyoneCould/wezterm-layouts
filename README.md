@@ -46,10 +46,11 @@ Layouts go in `~\.config\wezterm\layouts\<name>\`, or `$env:WZL_DIR`.
 - splits are worked out from the pane positions in `wezterm cli list` and rebuilt with `split-pane --percent`, so they scale to whatever size the window is
 - every nvim listens on a pipe and inherits `WEZTERM_PANE`, so each one gets asked which pane it's in and to `:mksession` into the layout folder. Restored panes run `nvim -S` under `pwsh -NoExit`, quitting nvim leaves a shell
 - zoomed panes are unzoomed for a moment to read the real splits
-- wsl panes are found by `./wzl _probe`, which runs in each running distro, matches shells and nvims to panes by `WEZTERM_PANE` and reads their cwd from `/proc`. They come back as `wsl -d <distro> --cd <dir>` from pwsh, same as typing `wsl`, with `bash -ic "nvim -S ..."` if there was an nvim
+- wsl panes are found by `./wzl _probe`, which runs in each running distro, matches shells and nvims to panes by `WEZTERM_PANE` and reads their cwd from `/proc`. They come back as `wsl -d <distro> --cd <dir>` from cmd, same as typing `wsl`, with `bash -ic "nvim -S ..."` if there was an nvim
 - `./wzl` is also the wsl command, it just runs `wzl.ps1` through `pwsh.exe`
 
 ## Notes
 
 - sessions don't keep unsaved changes, and only nvim gets restarted. Anything else (lazygit, btop) comes back as a shell in the same folder
 - pwsh's `cd` doesn't move the process, so wezterm only knows a shell's real cwd if the prompt reports it. The pane you run `save` from, nvim panes and wsl panes are always right. For the rest add `"pwd": "osc7"` to the oh-my-posh config
+- wezterm doesn't give back memory from closed windows (~150-250MB each, 20240203 and nightly), so `-Window` adds up over a day. tabs and splits don't leak, so opening into the current window is fine

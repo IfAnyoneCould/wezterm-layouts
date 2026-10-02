@@ -131,10 +131,10 @@ function First($t) { if ($t.pane) { $t.pane } else { First $t.a } }
 function Spawn-Args($p) {
   if ($p.wsl) {
     # WSLENV so this pane can still be found next save
-    $c = "`$env:WSLENV = 'WEZTERM_PANE:' + `$env:WSLENV; wsl -d $($p.wsl) --cd '$($p.cwd)'"
-    if ($p.nvim) { $c += " -e bash -ic `"nvim -S '$(To-Wsl (Join-Path $dir $p.nvim))'; exec bash`"" }
-    # no profile, it only launches wsl and the profile was most of the startup
-    return '--', 'pwsh', '-NoLogo', '-NoProfile', '-Command', $c
+    # cmd not pwsh, it only sets WSLENV and pwsh was ~0.5s of every pane
+    $a = '--', 'cmd', '/c', 'set', 'WSLENV=WEZTERM_PANE:%WSLENV%&&', 'wsl', '-d', $p.wsl, '--cd', $p.cwd
+    if ($p.nvim) { $a += '-e', 'bash', '-ic', "nvim -S '$(To-Wsl (Join-Path $dir $p.nvim))'; exec bash" }
+    return $a
   }
   $a = @()
   if ($p.cwd -and (Test-Path -LiteralPath $p.cwd)) { $a += '--cwd', $p.cwd }
